@@ -74,7 +74,7 @@ syn keyword pythonConditional elif else if
 syn keyword pythonRepeat for while
 syn keyword pythonOperator and in is not or
 syn keyword pythonException except finally raise try
-syn keyword pythonInclude from import
+syn keyword pythonInclude from import cimport
 
 " Decorators (new in Python 2.4)
 syn match pythonDecorator "@" display nextgroup=pythonFunction skipwhite
