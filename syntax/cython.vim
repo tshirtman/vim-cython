@@ -74,7 +74,7 @@ syn keyword pythonConditional elif else if
 syn keyword pythonRepeat for while
 syn keyword pythonOperator and in is not or
 syn keyword pythonException except finally raise try
-syn keyword pythonInclude from import cimport
+syn keyword pythonInclude from import cimport include
 
 " Decorators (new in Python 2.4)
 syn match pythonDecorator "@" display nextgroup=pythonFunction skipwhite
@@ -189,7 +189,7 @@ if !exists("python_no_builtin_highlight")
 " non-essential built-in functions; Python 2.6 only
   syn keyword pythonBuiltin apply buffer coerce intern
 " Cython types "
-  syn keyword pythonBuiltin void bint int short double float unsigned operator
+  syn keyword pythonBuiltin void NULL bint int short double float unsigned operator
   syn keyword pythonBuiltin struct union enum
 endif
 
