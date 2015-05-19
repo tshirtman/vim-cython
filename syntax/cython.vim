@@ -69,12 +69,21 @@ endif
 syn keyword pythonStatement False, None, True
 syn keyword pythonStatement as assert break continue del exec global
 syn keyword pythonStatement lambda nonlocal pass print return with yield
-syn keyword pythonStatement class cdef cpdef ctypedef cppclass def nextgroup=pythonFunction skipwhite
+syn keyword pythonStatement class def nextgroup=pythonFunction skipwhite
 syn keyword pythonConditional elif else if
 syn keyword pythonRepeat for while
 syn keyword pythonOperator and in is not or
 syn keyword pythonException except finally raise try
 syn keyword pythonInclude from import cimport include
+
+" Cython: additions
+syn keyword pythonStatement gil nogil
+syn keyword pythonStatement cpdef cppclass nextgroup=pythonFunction skipwhite
+syn match pythonStatement "\v<(cdef|ctypedef)>" nextgroup=pythonFunction skipwhite
+syn match pythonStatement "\v<cdef (api|class|enum|extern|inline|public api|public|readonly|union)>" nextgroup=pythonFunction skipwhite
+syn match pythonStatement "\v<ctypedef (enum|struct|union)>" nextgroup=pythonFunction skipwhite
+syn keyword pythonConditional ELIF ELSE IF
+syn keyword pythonInclude DEF
 
 " Decorators (new in Python 2.4)
 syn match pythonDecorator "@" display nextgroup=pythonFunction skipwhite
@@ -83,8 +92,11 @@ syn match pythonDecorator "@" display nextgroup=pythonFunction skipwhite
 " interpreted as a function inside the contained environment of
 " doctests.
 " A dot must be allowed because of @MyClass.myfunc decorators.
+" Cython: To match type declarations, allow spaces.  To avoid matching
+" "x" in "cdef type x", require either a colon or a parenthesis opening,
+" possibly after escaped newlines but not a "=" ("cdef foo = bar()")
 syn match pythonFunction
-      \ "\%(\%(def\s\|class\s\|cppclass\s\|ctypedef\s\|cpdef\s\|cdef\s\|@\)\s*\)\@<=\h\%(\w\|\.\)*" contained
+      \ "\v%(%(def\s|class\s|cppclass\s|ctypedef\s|cpdef\s|cdef\s|\@)\s*\w*\s*)@<=\h%(\w|\.|\s)*\ze([^=]|\\\n)*(\:|\()" contained
 
 syn match pythonComment "#.*$" contains=pythonTodo,@Spell
 syn keyword pythonTodo FIXME NOTE NOTES TODO XXX contained
@@ -177,7 +189,9 @@ if !exists("python_no_builtin_highlight")
   syn keyword pythonBuiltin help hex id input int isinstance
   syn keyword pythonBuiltin issubclass iter len list locals map max
   syn keyword pythonBuiltin min next object oct open ord pow print
-  syn keyword pythonBuiltin property range repr reversed round set
+" For compatibility with Cython property statement.
+  syn match pythonBuiltin "\v<property>"
+  syn keyword pythonBuiltin range repr reversed round set
   syn keyword pythonBuiltin setattr slice sorted staticmethod str
   syn keyword pythonBuiltin sum super tuple type vars zip __import__
 " Python 2.6 only
@@ -189,9 +203,13 @@ if !exists("python_no_builtin_highlight")
 " non-essential built-in functions; Python 2.6 only
   syn keyword pythonBuiltin apply buffer coerce intern
 " Cython types "
-  syn keyword pythonBuiltin void NULL bint int short double float unsigned operator
+  syn keyword pythonBuiltin void NULL bint short int long size_t Py_ssize_t float double unsigned operator
   syn keyword pythonBuiltin struct union enum
 endif
+
+" Cython: define property statement here
+syn match pythonStatement "\v<property>" nextgroup=pythonFunction skipwhite
+syn match pythonFunction "\%(property\s*\)\@<=\h\w*" contained
 
 " From the 'Python Library Reference' class hierarchy at the bottom.
 " http://docs.python.org/library/exceptions.html
