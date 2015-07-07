@@ -78,9 +78,9 @@ syn keyword pythonInclude from import cimport include
 
 " Cython: additions
 syn keyword pythonStatement gil nogil
-syn keyword pythonStatement cpdef cppclass nextgroup=pythonFunction skipwhite
+syn keyword pythonStatement cpdef cppclass enum struct union nextgroup=pythonFunction skipwhite
 syn match pythonStatement "\v<(cdef|ctypedef)>" nextgroup=pythonFunction skipwhite
-syn match pythonStatement "\v<cdef (api|class|enum|extern|inline|public api|public|readonly|union)>" nextgroup=pythonFunction skipwhite
+syn match pythonStatement "\v<cdef (api|public api|public|class|enum|extern|inline|readonly|struct|packed struct|union)>" nextgroup=pythonFunction skipwhite
 syn match pythonStatement "\v<ctypedef (enum|struct|union)>" nextgroup=pythonFunction skipwhite
 syn keyword pythonConditional ELIF ELSE IF
 syn keyword pythonInclude DEF
@@ -96,7 +96,7 @@ syn match pythonDecorator "@" display nextgroup=pythonFunction skipwhite
 " "x" in "cdef type x", require either a colon or a parenthesis opening,
 " possibly after escaped newlines but not a "=" ("cdef foo = bar()")
 syn match pythonFunction
-      \ "\v%(%(def\s|class\s|cppclass\s|ctypedef\s|cpdef\s|cdef\s|\@)\s*\w*\s*)@<=\h%(\w|\.|\s)*\ze([^=]|\\\n)*(\:|\()" contained
+      \ "\v%(%(def\s|class\s|cppclass\s|ctypedef\s|cpdef\s|cdef\s|enum\s|struct\s|union\s|\@)\s*\w*\s*)@<=\h%(\w|\.|\s)*\ze([^=]|\\\n)*(\:|\()" contained
 
 syn match pythonComment "#.*$" contains=pythonTodo,@Spell
 syn keyword pythonTodo FIXME NOTE NOTES TODO XXX contained
@@ -204,7 +204,6 @@ if !exists("python_no_builtin_highlight")
   syn keyword pythonBuiltin apply buffer coerce intern
 " Cython types "
   syn keyword pythonBuiltin void NULL bint short int long size_t Py_ssize_t float double unsigned operator
-  syn keyword pythonBuiltin struct union enum
 endif
 
 " Cython: define property statement here
@@ -267,7 +266,7 @@ if !exists("python_no_doctest_highlight")
 endif
 
 " Sync at the beginning of class, function, or method definition.
-syn sync match pythonSync grouphere NONE "^\s*\%(def\|class\|ctypedef\|cppclass\|cpdef\|cdef\)\s\+\h\w*\s*("
+syn sync match pythonSync grouphere NONE "^\s*\%(def\|class\|cppclass\|ctypedef\|cpdef\|cdef\|enum\|struct\|union\)\s\+\h\w*\s*("
 
 if version >= 508 || !exists("did_python_syn_inits")
   if version <= 508
