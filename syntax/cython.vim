@@ -67,8 +67,8 @@ endif
 " built-in below (use 'from __future__ import print_function' in 2.6)
 "
 syn keyword pythonStatement False, None, True
-syn keyword pythonStatement as assert break continue del exec global
-syn keyword pythonStatement lambda nonlocal pass print return with yield
+syn keyword pythonStatement as assert break continue del exec global lambda
+      \ nonlocal pass print return with yield
 syn keyword pythonStatement class def nextgroup=pythonFunction skipwhite
 syn keyword pythonConditional elif else if
 syn keyword pythonRepeat for while
@@ -78,10 +78,10 @@ syn keyword pythonInclude from import cimport include
 
 " Cython: additions
 syn keyword pythonStatement gil nogil
-syn keyword pythonStatement cpdef cppclass enum struct union nextgroup=pythonFunction skipwhite
-syn match pythonStatement "\v<(cdef|ctypedef)>" nextgroup=pythonFunction skipwhite
-syn match pythonStatement "\v<cdef (api|public api|public|class|enum|extern|inline|readonly|struct|packed struct|union)>" nextgroup=pythonFunction skipwhite
-syn match pythonStatement "\v<ctypedef (enum|struct|union)>" nextgroup=pythonFunction skipwhite
+syn keyword pythonStatement cppclass enum struct union nextgroup=pythonFunction skipwhite
+syn keyword pythonStatement cpdef nextgroup=pythonBuiltin,pythonFunction skipwhite
+syn match pythonStatement "\v<cdef( (api|public api|public|class|enum|extern|inline|readonly|struct|packed struct|union))?>" nextgroup=pythonBuiltin,pythonFunction skipwhite
+syn match pythonStatement "\v<ctypedef( (enum|struct|union))?>" nextgroup=pythonFunction skipwhite
 syn keyword pythonConditional ELIF ELSE IF
 syn keyword pythonInclude DEF
 
@@ -92,11 +92,11 @@ syn match pythonDecorator "@" display nextgroup=pythonFunction skipwhite
 " interpreted as a function inside the contained environment of
 " doctests.
 " A dot must be allowed because of @MyClass.myfunc decorators.
-" Cython: To match type declarations, allow spaces.  To avoid matching
-" "x" in "cdef type x", require either a colon or a parenthesis opening,
-" possibly after escaped newlines but not a "=" ("cdef foo = bar()")
+" Cython: To match type declarations, allow spaces and brackets.  To avoid
+" matching "x" in "cdef type x", require either a colon or a parenthesis
+" opening, possibly after escaped newlines but not a "=" ("cdef foo = bar()")
 syn match pythonFunction
-      \ "\v%(%(def\s|class\s|cppclass\s|ctypedef\s|cpdef\s|cdef\s|enum\s|struct\s|union\s|\@)\s*\w*\s*)@<=\h%(\w|\.|\s)*\ze([^=]|\\\n)*(\:|\()" contained
+      \ "\v%(%(def\s|class\s|cppclass\s|ctypedef\s|cpdef\s|cdef\s|enum\s|struct\s|union\s|\@)(\s|\w|\\\n|(\[.*\]))*)@<=\h%(\w|\.)*\ze([^=]|\\\n)*(\:|\()"
 
 syn match pythonComment "#.*$" contains=pythonTodo,@Spell
 syn keyword pythonTodo FIXME NOTE NOTES TODO XXX contained
@@ -178,32 +178,35 @@ endif
 " Python built-in functions are in alphabetical order.
 if !exists("python_no_builtin_highlight")
 " built-in constants
+  syn match pythonBtinIsolator	"\(\.\)\@<!\<\k\+\>" contains=pythonBuiltin,pythonStatement
 " 'False', 'True', and 'None' are also reserved words in Python 3.0
   syn keyword pythonBuiltin False True None
-  syn keyword pythonBuiltin NotImplemented Ellipsis __debug__
+  syn keyword pythonBuiltin NotImplemented Ellipsis __debug__ contained
+	\ containedin=pythonBtinIsolator
 " built-in functions
-  syn keyword pythonBuiltin abs all any bin bool chr classmethod
-  syn keyword pythonBuiltin compile complex delattr dict dir divmod
-  syn keyword pythonBuiltin enumerate eval filter float format
-  syn keyword pythonBuiltin frozenset getattr globals hasattr hash
-  syn keyword pythonBuiltin help hex id input int isinstance
-  syn keyword pythonBuiltin issubclass iter len list locals map max
-  syn keyword pythonBuiltin min next object oct open ord pow print
+  syn keyword pythonBuiltin abs all any bin bool chr classmethod compile
+	\ complex delattr dict dir divmod enumerate eval filter float format
+	\ frozenset getattr globals hasattr hash help hex id input int
+	\ isinstance issubclass iter len list locals map max min next object oct
+	\ open ord pow print range repr reversed round set setattr slice sorted
+	\ staticmethod str sum super tuple type vars zip __import__
+	\ contained containedin=pythonBtinIsolator
 " For compatibility with Cython property statement.
   syn match pythonBuiltin "\v<property>"
-  syn keyword pythonBuiltin range repr reversed round set
-  syn keyword pythonBuiltin setattr slice sorted staticmethod str
-  syn keyword pythonBuiltin sum super tuple type vars zip __import__
 " Python 2.6 only
-  syn keyword pythonBuiltin basestring callable cmp execfile file
-  syn keyword pythonBuiltin long raw_input reduce reload unichr
-  syn keyword pythonBuiltin unicode xrange
+  syn keyword pythonBuiltin basestring callable cmp execfile file long raw_input
+	\ reduce reload unichr unicode xrange
+	\ contained containedin=pythonBtinIsolator
 " Python 3.0 only
   syn keyword pythonBuiltin ascii bytearray bytes exec memoryview
+	\ contained containedin=pythonBtinIsolator
 " non-essential built-in functions; Python 2.6 only
   syn keyword pythonBuiltin apply buffer coerce intern
+	\ contained containedin=pythonBtinIsolator
 " Cython types "
-  syn keyword pythonBuiltin void NULL bint short int long size_t Py_ssize_t float double unsigned operator
+  syn keyword pythonBuiltin void NULL bint short int long size_t Py_ssize_t
+	\ float double unsigned operator
+	\ contained containedin=pythonBtinIsolator
 endif
 
 " Cython: define property statement here
@@ -214,29 +217,27 @@ syn match pythonFunction "\%(property\s*\)\@<=\h\w*" contained
 " http://docs.python.org/library/exceptions.html
 if !exists("python_no_exception_highlight")
 " builtin base exceptions (only used as base classes for other exceptions)
-  syn keyword pythonExceptions BaseException Exception
-  syn keyword pythonExceptions ArithmeticError EnvironmentError
-  syn keyword pythonExceptions LookupError
+  syn keyword pythonExceptions BaseException Exception ArithmeticError
+	\ EnvironmentError LookupError
+	\ contained containedin=pythonBtinIsolator
 " builtin base exception removed in Python 3.0
   syn keyword pythonExceptions StandardError
+	\ contained containedin=pythonBtinIsolator
 " builtin exceptions (actually raised)
   syn keyword pythonExceptions AssertionError AttributeError BufferError
-  syn keyword pythonExceptions EOFError FloatingPointError GeneratorExit
-  syn keyword pythonExceptions IOError ImportError IndentationError
-  syn keyword pythonExceptions IndexError KeyError KeyboardInterrupt
-  syn keyword pythonExceptions MemoryError NameError NotImplementedError
-  syn keyword pythonExceptions OSError OverflowError ReferenceError
-  syn keyword pythonExceptions RuntimeError StopIteration SyntaxError
-  syn keyword pythonExceptions SystemError SystemExit TabError TypeError
-  syn keyword pythonExceptions UnboundLocalError UnicodeError
-  syn keyword pythonExceptions UnicodeDecodeError UnicodeEncodeError
-  syn keyword pythonExceptions UnicodeTranslateError ValueError VMSError
-  syn keyword pythonExceptions WindowsError ZeroDivisionError
+	\ EOFError FloatingPointError GeneratorExit IOError ImportError
+	\ IndentationError IndexError KeyError KeyboardInterrupt MemoryError
+	\ NameError NotImplementedError OSError OverflowError ReferenceError
+	\ RuntimeError StopIteration SyntaxError SystemError SystemExit TabError
+	\ TypeError UnboundLocalError UnicodeError UnicodeDecodeError
+	\ UnicodeEncodeError UnicodeTranslateError ValueError VMSError
+	\ WindowsError ZeroDivisionError
+	\ contained containedin=pythonBtinIsolator
 " builtin warnings
   syn keyword pythonExceptions BytesWarning DeprecationWarning FutureWarning
-  syn keyword pythonExceptions ImportWarning PendingDeprecationWarning
-  syn keyword pythonExceptions RuntimeWarning SyntaxWarning UnicodeWarning
-  syn keyword pythonExceptions UserWarning Warning
+	\ ImportWarning PendingDeprecationWarning RuntimeWarning SyntaxWarning
+	\ UnicodeWarning UserWarning Warning
+	\ contained containedin=pythonBtinIsolator
 endif
 
 if exists("python_space_error_highlight")
