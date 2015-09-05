@@ -130,8 +130,6 @@ syn keyword pythonStatement     def class nextgroup=pythonFunction skipwhite
 syn keyword pythonRepeat        for while
 syn keyword pythonConditional   if elif else
 syn keyword pythonImport        import
-" keep pyrex.vim happy
-syn keyword pythonInclude       import
 syn keyword pythonException     try except finally
 syn keyword pythonOperator      and in is not or
 
@@ -157,14 +155,14 @@ else
 endif
 
 " Cython: additions
-syn keyword pythonStatement gil nogil
+syn keyword pythonStatement const gil nogil
 syn keyword pythonStatement cppclass enum struct union nextgroup=pythonFunction skipwhite
 syn keyword pythonStatement cpdef nextgroup=pythonBuiltin,pythonFunction skipwhite
 syn match pythonStatement "\v<cdef( (api|public api|public|class|enum|extern|inline|readonly|struct|packed struct|union))?>" nextgroup=pythonBuiltin,pythonFunction skipwhite
 syn match pythonStatement "\v<ctypedef( (enum|struct|union))?>" nextgroup=pythonFunction skipwhite
 syn keyword pythonConditional ELIF ELSE IF
-syn keyword pythonInclude DEF
-syn keyword pythonInclude cimport include
+syn keyword pythonImport DEF
+syn keyword pythonImport cimport include
 " Cython: we cannot use the "contained" mechanism because we may need to match
 " a return type declaration first, so we back-assert a def.
 syn match pythonFunction
