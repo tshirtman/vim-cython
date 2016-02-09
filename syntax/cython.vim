@@ -115,6 +115,13 @@ if s:Enabled("g:python_highlight_all")
   call s:EnableByDefault("g:python_highlight_doctests")
   call s:EnableByDefault("g:python_print_as_function")
 endif
+"
+"
+" Builtin isolator
+"
+
+syn match pythonBuiltinIsolator	"\(\.[\n \t]*\)\@160<!\<\K\+\>"
+
 
 "
 " Keywords
@@ -130,23 +137,22 @@ syn keyword pythonStatement     def class nextgroup=pythonFunction skipwhite
 syn keyword pythonRepeat        for while
 syn keyword pythonConditional   if elif else
 syn keyword pythonImport        import
-syn keyword pythonException     try except finally
+syn keyword pythonException     try finally
 syn keyword pythonOperator      and in is not or
 
-syn match pythonStatement   "\<yield\>" display
-syn match pythonImport      "\<from\>" display
+syn match pythonStatement       "\<yield\>" display
+syn match pythonImport          "\<from\>" display
+syn match pythonException       "\<except\>?\?"
 
 if s:Python2Syntax()
   if !s:Enabled("g:python_print_as_function")
     syn keyword pythonStatement  print
   endif
   syn keyword pythonImport      as
-  syn match   pythonFunction    "[a-zA-Z_][a-zA-Z0-9_]*" display contained
 else
   syn keyword pythonStatement   as nonlocal None
   syn match   pythonStatement   "\<yield\s\+from\>" display
   syn keyword pythonBoolean     True False
-  syn match   pythonFunction    "\%([^[:cntrl:][:space:][:punct:][:digit:]]\|_\)\%([^[:cntrl:][:punct:][:space:]]\|_\)*" display contained
   syn keyword pythonStatement   await
   syn match   pythonStatement   "\<async\s\+def\>" display
   syn match   pythonStatement   "\<async\s\+with\>" display
@@ -157,16 +163,21 @@ endif
 " Cython: additions
 syn keyword pythonStatement const gil nogil
 syn keyword pythonStatement cppclass enum struct union nextgroup=pythonFunction skipwhite
-syn keyword pythonStatement cpdef nextgroup=pythonBuiltin,pythonFunction skipwhite
-syn match pythonStatement "\v<cdef( (api|public api|public|class|enum|extern|inline|readonly|struct|packed struct|union))?>" nextgroup=pythonBuiltin,pythonFunction skipwhite
+syn keyword pythonStatement cpdef nextgroup=cythonType,pythonFunction skipwhite
+syn match pythonStatement "\v<cdef( (api|public api|public|class|enum|extern|inline|readonly|struct|packed struct|union))?>" nextgroup=cythonType,pythonFunction skipwhite
 syn match pythonStatement "\v<ctypedef( (enum|struct|union))?>" nextgroup=pythonFunction skipwhite
 syn keyword pythonConditional ELIF ELSE IF
 syn keyword pythonImport DEF
 syn keyword pythonImport cimport include
 " Cython: we cannot use the "contained" mechanism because we may need to match
 " a return type declaration first, so we back-assert a def.
+" (\s|\w|\\\n|\.|(\[.*\])|\*)*: return type, may be a dotted name, an array or a
+" pointer.
+" \zs instead of @<= doesn't seem to work.
 syn match pythonFunction
-      \ "\v%(%(def\s|class\s|cppclass\s|ctypedef\s|cpdef\s|cdef\s|enum\s|struct\s|union\s|\@)(\s|\w|\\\n|(\[.*\]))*)@<=\h\w*\ze([^=]|\\\n)*(\:|\()"
+      \ "\v%(%(def\s|class\s|cppclass\s|ctypedef\s|cpdef\s|cdef\s|enum\s|struct\s|union\s|\@)%(\s|\w|\\\n|\.|%(\[.*\])|\*)*)@<=<\h\w*>\ze\W*%(\:|\()"
+syn match cythonType
+      \ "\v%(cdef\s+)@<=(\w|\.)+"
 
 "
 " Decorators (new in Python 2.4)
@@ -394,33 +405,37 @@ endif
 
 if s:Enabled("g:python_highlight_builtin_funcs")
   if s:Python2Syntax()
-    syn keyword pythonBuiltinFunc	apply basestring buffer callable coerce
-    syn keyword pythonBuiltinFunc	execfile file help intern long raw_input
-    syn keyword pythonBuiltinFunc	reduce reload unichr unicode xrange
+    syn keyword pythonBuiltinFunc   apply basestring buffer callable coerce
+                \ execfile file help intern long raw_input reduce reload unichr
+                \ unicode xrange
+                \ contained containedin=pythonBuiltinIsolator
     if s:Enabled("g:python_print_as_function")
-      syn keyword pythonBuiltinFunc	print
+      syn keyword pythonBuiltinFunc print
+                \ contained containedin=pythonBuiltinIsolator
     endif
   else
-    syn keyword pythonBuiltinFunc	ascii exec memoryview print
+    syn keyword pythonBuiltinFunc   ascii exec memoryview print
+                \ contained containedin=pythonBuiltinIsolator
   endif
   syn keyword pythonBuiltinFunc	__import__ abs all any
-  syn keyword pythonBuiltinFunc	bin bool bytearray bytes
-  syn keyword pythonBuiltinFunc	chr classmethod cmp compile complex
-  syn keyword pythonBuiltinFunc	delattr dict dir divmod enumerate eval
-  syn keyword pythonBuiltinFunc	filter float format frozenset getattr
-  syn keyword pythonBuiltinFunc	globals hasattr hash hex id
-  syn keyword pythonBuiltinFunc	input int isinstance
-  syn keyword pythonBuiltinFunc	issubclass iter len list locals map max
-  syn keyword pythonBuiltinFunc	min next object oct open ord
-  syn keyword pythonBuiltinFunc	pow range
-  syn keyword pythonBuiltinFunc	repr reversed round set setattr
-  syn keyword pythonBuiltinFunc	slice sorted staticmethod str sum super tuple
-  syn keyword pythonBuiltinFunc	type vars zip
+              \	bin bool bytearray bytes
+              \	chr classmethod cmp compile complex
+              \	delattr dict dir divmod enumerate eval
+              \	filter float format frozenset getattr
+              \	globals hasattr hash hex id
+              \	input int isinstance
+              \	issubclass iter len list locals map max
+              \	min next object oct open ord
+              \	pow property range
+              \	repr reversed round set setattr
+              \	slice sorted staticmethod str sum super tuple
+              \	type vars zip
+              \ contained containedin=pythonBuiltinIsolator
 endif
 
 " Cython: additions
-syn keyword pythonBuiltinFunc void NULL bint short int long size_t Py_ssize_t
-    \ float double unsigned operator
+syn keyword pythonBuiltinFunc NULL operator sizeof
+syn keyword cythonType void bint short int long size_t Py_ssize_t float double unsigned
 " Cython: define property statement here
 syn match pythonStatement "\v<property>" nextgroup=pythonFunction skipwhite
 syn match pythonFunction "\%(property\s*\)\@<=\h\w*" contained
@@ -431,40 +446,44 @@ syn match pythonFunction "\%(property\s*\)\@<=\h\w*" contained
 
 if s:Enabled("g:python_highlight_exceptions")
   if s:Python2Syntax()
-    syn keyword pythonExClass	StandardError
+    syn keyword pythonExClass	StandardError contained containedin=pythonBuiltinIsolator
   else
     syn keyword pythonExClass	BlockingIOError ChildProcessError
-    syn keyword pythonExClass	ConnectionError BrokenPipeError
-    syn keyword pythonExClass	ConnectionAbortedError ConnectionRefusedError
-    syn keyword pythonExClass	ConnectionResetError FileExistsError
-    syn keyword pythonExClass	FileNotFoundError InterruptedError
-    syn keyword pythonExClass	IsADirectoryError NotADirectoryError
-    syn keyword pythonExClass	PermissionError ProcessLookupError TimeoutError
+                \ ConnectionError BrokenPipeError
+                \ ConnectionAbortedError ConnectionRefusedError
+                \ ConnectionResetError FileExistsError
+                \ FileNotFoundError InterruptedError
+                \ IsADirectoryError NotADirectoryError
+                \ PermissionError ProcessLookupError TimeoutError
+                \ contained containedin=pythonBuiltinIsolator
 
-    syn keyword pythonExClass	ResourceWarning
+    syn keyword pythonExClass	ResourceWarning contained containedin=pythonBuiltinIsolator
   endif
   syn keyword pythonExClass	BaseException
-  syn keyword pythonExClass	Exception ArithmeticError
-  syn keyword pythonExClass	LookupError EnvironmentError
+              \	Exception ArithmeticError
+              \	LookupError EnvironmentError
+              \ contained containedin=pythonBuiltinIsolator
 
   syn keyword pythonExClass	AssertionError AttributeError BufferError EOFError
-  syn keyword pythonExClass	FloatingPointError GeneratorExit IOError
-  syn keyword pythonExClass	ImportError IndexError KeyError
-  syn keyword pythonExClass	KeyboardInterrupt MemoryError NameError
-  syn keyword pythonExClass	NotImplementedError OSError OverflowError
-  syn keyword pythonExClass	ReferenceError RuntimeError StopIteration
-  syn keyword pythonExClass	SyntaxError IndentationError TabError
-  syn keyword pythonExClass	SystemError SystemExit TypeError
-  syn keyword pythonExClass	UnboundLocalError UnicodeError
-  syn keyword pythonExClass	UnicodeEncodeError UnicodeDecodeError
-  syn keyword pythonExClass	UnicodeTranslateError ValueError VMSError
-  syn keyword pythonExClass	WindowsError ZeroDivisionError
+              \	FloatingPointError GeneratorExit IOError
+              \	ImportError IndexError KeyError
+              \	KeyboardInterrupt MemoryError NameError
+              \	NotImplementedError OSError OverflowError
+              \	ReferenceError RuntimeError StopIteration
+              \	SyntaxError IndentationError TabError
+              \	SystemError SystemExit TypeError
+              \	UnboundLocalError UnicodeError
+              \	UnicodeEncodeError UnicodeDecodeError
+              \	UnicodeTranslateError ValueError VMSError
+              \	WindowsError ZeroDivisionError
+              \ contained containedin=pythonBuiltinIsolator
 
-  syn keyword pythonExClass	Warning UserWarning BytesWarning DeprecationWarning
-  syn keyword pythonExClass	PendingDepricationWarning SyntaxWarning
-  syn keyword pythonExClass	RuntimeWarning FutureWarning
-  syn keyword pythonExClass	ImportWarning UnicodeWarning
-endif
+    syn keyword pythonExClass	Warning UserWarning BytesWarning DeprecationWarning
+              \	PendingDepricationWarning SyntaxWarning
+              \	RuntimeWarning FutureWarning
+              \	ImportWarning UnicodeWarning
+              \ contained containedin=pythonBuiltinIsolator
+end
 
 if s:Enabled("g:python_slow_sync")
   syn sync minlines=2000
@@ -487,6 +506,7 @@ if version >= 508 || !exists("did_python_syn_inits")
   HiLink pythonStatement        Statement
   HiLink pythonImport           Include
   HiLink pythonFunction         Function
+  HiLink cythonType             Function
   HiLink pythonConditional      Conditional
   HiLink pythonRepeat           Repeat
   HiLink pythonException        Exception
