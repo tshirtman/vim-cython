@@ -164,16 +164,18 @@ endif
 syn keyword pythonStatement const gil nogil
 syn keyword pythonStatement cppclass enum struct union nextgroup=pythonFunction skipwhite
 syn keyword pythonStatement cpdef nextgroup=cythonType,pythonFunction skipwhite
-syn match pythonStatement "\v<cdef( (api|public api|public|class|enum|extern|inline|readonly|struct|packed struct|union))?>" nextgroup=cythonType,pythonFunction skipwhite
-syn match pythonStatement "\v<ctypedef( (enum|struct|union))?>" nextgroup=pythonFunction skipwhite
+syn match pythonStatement "\v<cdef(\s+(api|public api|public|class|enum|inline|readonly|struct|packed struct|union))?>" nextgroup=cythonType,pythonFunction skipwhite
+syn match pythonStatement "\v<ctypedef(\s+(enum|fused|struct|union))?>" nextgroup=pythonFunction skipwhite
 syn keyword pythonConditional ELIF ELSE IF
 syn keyword pythonImport DEF
 syn keyword pythonImport cimport include
+syn match pythonImport "\v<cdef\s+extern\s+from\ze\s+(\"|'|\*)"
+" Note (also for pythonFunction below): \zs doesn't work there.
+syn match pythonImport "\v%(<cdef\s+extern\s+from\s+(\"[^"]+\"|'[^']+'|\*)\s+)@<=namespace\ze(\s+\"[^"]+\"|'[^']+')"
 " Cython: we cannot use the "contained" mechanism because we may need to match
 " a return type declaration first, so we back-assert a def.
 " (\s|\w|\\\n|\.|(\[.*\])|\*)*: return type, may be a dotted name, an array or a
 " pointer.
-" \zs instead of @<= doesn't seem to work.
 syn match pythonFunction
       \ "\v%(%(def\s|class\s|cppclass\s|ctypedef\s|cpdef\s|cdef\s|enum\s|struct\s|union\s|\@)%(\s|\w|\\\n|\.|%(\[.*\])|\*)*)@<=<\h\w*>\ze\W*%(\:|\()"
 syn match cythonType
