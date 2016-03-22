@@ -2,7 +2,7 @@
 " Language:             Cython
 " Current Maintainer:   Antony Lee <anntzer dot lee at gmail dot com>
 " URL:                  https://github.com/anntzer/vim-cython
-" Last Change:          2015-07-07
+" Last Change:          2016-03-21
 " Filenames:            *.pyx
 " Version:              0.1
 "
@@ -115,13 +115,12 @@ if s:Enabled("g:python_highlight_all")
   call s:EnableByDefault("g:python_highlight_doctests")
   call s:EnableByDefault("g:python_print_as_function")
 endif
-"
+
 "
 " Builtin isolator
 "
 
 syn match pythonBuiltinIsolator	"\(\.[\n \t]*\)\@160<!\<\K\+\>"
-
 
 "
 " Keywords
@@ -136,32 +135,42 @@ syn keyword pythonStatement     with
 syn keyword pythonStatement     def class nextgroup=pythonFunction skipwhite
 syn keyword pythonRepeat        for while
 syn keyword pythonConditional   if elif else
+" Cython: removed
+" " The standard pyrex.vim unconditionally removes the pythonInclude group, so
+" " we provide a dummy group here to avoid crashing pyrex.vim.
+" syn keyword pythonInclude       import
 syn keyword pythonImport        import
+" Cython: removed
+" syn keyword pythonException     try except finally
 syn keyword pythonException     try finally
 syn keyword pythonOperator      and in is not or
 
-syn match pythonStatement       "\<yield\>" display
-syn match pythonImport          "\<from\>" display
-syn match pythonException       "\<except\>?\?"
+syn match pythonStatement   "\<yield\>" display
+syn match pythonImport      "\<from\>" display
+" Cython: added
+syn match pythonException   "\<except\>?\?"
 
 if s:Python2Syntax()
   if !s:Enabled("g:python_print_as_function")
     syn keyword pythonStatement  print
   endif
   syn keyword pythonImport      as
+  " Cython: removed
+  " syn match   pythonFunction    "[a-zA-Z_][a-zA-Z0-9_]*" display contained
 else
   syn keyword pythonStatement   as nonlocal None
   syn match   pythonStatement   "\<yield\s\+from\>" display
   syn keyword pythonBoolean     True False
+  " Cython: removed
+  " syn match   pythonFunction    "\%([^[:cntrl:][:space:][:punct:][:digit:]]\|_\)\%([^[:cntrl:][:punct:][:space:]]\|_\)*" display contained
   syn keyword pythonStatement   await
-  syn match   pythonStatement   "\<async\s\+def\>" display
+  syn match   pythonStatement   "\<async\s\+def\>" nextgroup=pythonFunction skipwhite
   syn match   pythonStatement   "\<async\s\+with\>" display
   syn match   pythonStatement   "\<async\s\+for\>" display
-  syn match   pythonStatement   "\<async\s\+with\>" display
 endif
 
-" Cython: additions
-syn keyword pythonStatement const gil nogil
+" Cython: added
+syn keyword pythonStatement const gil new nogil
 syn keyword pythonStatement cppclass enum struct union nextgroup=pythonFunction skipwhite
 syn keyword pythonStatement cpdef nextgroup=cythonType,pythonFunction skipwhite
 syn match pythonStatement "\v<cdef(\s+(api|public api|public|class|enum|inline|readonly|struct|packed struct|union))?>" nextgroup=cythonType,pythonFunction skipwhite
@@ -185,7 +194,7 @@ syn match cythonType
 " Decorators (new in Python 2.4)
 "
 
-syn match   pythonDecorator	"@" display nextgroup=pythonDottedName skipwhite
+syn match   pythonDecorator	"^\s*\zs@" display nextgroup=pythonDottedName skipwhite
 if s:Python2Syntax()
   syn match   pythonDottedName "[a-zA-Z_][a-zA-Z0-9_]*\%(\.[a-zA-Z_][a-zA-Z0-9_]*\)*" display contained
 else
@@ -398,7 +407,7 @@ if s:Enabled("g:python_highlight_builtin_objs")
     syn keyword pythonBoolean		True False
   endif
   syn keyword pythonBuiltinObj	Ellipsis NotImplemented
-  syn keyword pythonBuiltinObj	__debug__ __doc__ __file__ __name__ __package__
+  syn keyword pythonBuiltinObj	__debug__ __doc__ __file__ __name__ __package__ __spec__
 endif
 
 "
@@ -407,16 +416,16 @@ endif
 
 if s:Enabled("g:python_highlight_builtin_funcs")
   if s:Python2Syntax()
-    syn keyword pythonBuiltinFunc   apply basestring buffer callable coerce
-                \ execfile file help intern long raw_input reduce reload unichr
-                \ unicode xrange
+    syn keyword pythonBuiltinFunc	apply basestring buffer callable coerce
+                \ execfile file help intern long raw_input
+                \ reduce reload unichr unicode xrange
                 \ contained containedin=pythonBuiltinIsolator
     if s:Enabled("g:python_print_as_function")
-      syn keyword pythonBuiltinFunc print
-                \ contained containedin=pythonBuiltinIsolator
+      syn keyword pythonBuiltinFunc	print
+                  \ contained containedin=pythonBuiltinIsolator
     endif
   else
-    syn keyword pythonBuiltinFunc   ascii exec memoryview print
+    syn keyword pythonBuiltinFunc	ascii exec memoryview print
                 \ contained containedin=pythonBuiltinIsolator
   endif
   syn keyword pythonBuiltinFunc	__import__ abs all any
@@ -435,9 +444,9 @@ if s:Enabled("g:python_highlight_builtin_funcs")
               \ contained containedin=pythonBuiltinIsolator
 endif
 
-" Cython: additions
-syn keyword pythonBuiltinFunc NULL operator sizeof
-syn keyword cythonType void bint short int long size_t Py_ssize_t float double unsigned
+" Cython: added
+syn keyword pythonBuiltinFunc NULL sizeof
+syn keyword cythonType void bint char short int long size_t Py_ssize_t float double unsigned
 " Cython: define property statement here
 syn match pythonStatement "\v<property>" nextgroup=pythonFunction skipwhite
 syn match pythonFunction "\%(property\s*\)\@<=\h\w*" contained
@@ -458,15 +467,12 @@ if s:Enabled("g:python_highlight_exceptions")
                 \ IsADirectoryError NotADirectoryError
                 \ PermissionError ProcessLookupError TimeoutError
                 \ contained containedin=pythonBuiltinIsolator
-
     syn keyword pythonExClass	ResourceWarning contained containedin=pythonBuiltinIsolator
   endif
   syn keyword pythonExClass	BaseException
               \	Exception ArithmeticError
               \	LookupError EnvironmentError
-              \ contained containedin=pythonBuiltinIsolator
-
-  syn keyword pythonExClass	AssertionError AttributeError BufferError EOFError
+              \ AssertionError AttributeError BufferError EOFError
               \	FloatingPointError GeneratorExit IOError
               \	ImportError IndexError KeyError
               \	KeyboardInterrupt MemoryError NameError
