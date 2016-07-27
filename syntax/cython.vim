@@ -444,9 +444,11 @@ if s:Enabled("g:python_highlight_builtin_funcs")
               \ contained containedin=pythonBuiltinIsolator
 endif
 
-" Cython: added
+" Cython: added (see Compiler/Parsing.py)
 syn keyword pythonBuiltinFunc NULL sizeof
-syn keyword cythonType void bint char short int long size_t Py_ssize_t float double unsigned
+syn keyword cythonType void bint char short int long size_t ssize_t ptrdiff_t
+            \ unsigned signed Py_hash_t Py_ssize_t Py_UNICODE Py_UCS4
+            \ float double
 " Cython: define property statement here
 syn match pythonStatement "\v<property>" nextgroup=pythonFunction skipwhite
 syn match pythonFunction "\%(property\s*\)\@<=\h\w*" contained
