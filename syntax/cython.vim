@@ -210,6 +210,10 @@ syn match   pythonComment	"#.*$" display contains=pythonTodo,@Spell
 if !s:Enabled("g:python_highlight_file_headers_as_comments")
   syn match   pythonRun		"\%^#!.*$"
   syn match   pythonCoding	"\%^.*\%(\n.*\)\?#.*coding[:=]\s*[0-9A-Za-z-_.]\+.*$"
+  " Cython.Compiler.Parsing._match_compiler_directive_comment.
+  syn match   pythonDirective	"\v^\#\s*cython\s*\:\s*((\w|\.)+\s*\=.*)$"
+  " Cython.Build.Dependencies.DistutilsInfo.__init__.
+  syn match   pythonDirective   "\v^\#\s*distutils:.*"
 endif
 syn keyword pythonTodo		TODO FIXME XXX contained
 
@@ -530,6 +534,7 @@ if version >= 508 || !exists("did_python_syn_inits")
   if !s:Enabled("g:python_highlight_file_headers_as_comments")
     HiLink pythonCoding           Special
     HiLink pythonRun              Special
+    HiLink pythonDirective        Special
   endif
   HiLink pythonTodo             Todo
 
